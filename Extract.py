@@ -1,32 +1,56 @@
 import os
 import pandas as pd
-#import Transform
+from Transform import Transform
+from pyspark.sql import SparkSession
+import glob
+
+spark = SparkSession.builder.appName("myApp").getOrCreate()
+
 # Set the path to the directory containing the files
 etfs_path = '/users/madhavjani/PycharmProjects/DataEngineer/Stocks/etfs'
-# stock_path = '/users/madhavjani/PycharmProjects/DataEngineer/Stocks/stocks'
-# symbol_path = '/users/madhavjani/PycharmProjects/DataEngineer/Stocks'
+stock_path = '/users/madhavjani/PycharmProjects/DataEngineer/Stocks/stocks'
+symbol_path = '/users/madhavjani/PycharmProjects/DataEngineer/Stocks/symbols_valid_meta.csv'
 
 # Get a list of all files in the directory
-file_list = os.listdir(etfs_path)
-print(file_list)
+etfs_list = os.listdir(etfs_path)
+stock_list = os.listdir(stock_path)
+
+
 # Create an empty list to store the dataframes
-df_list = []
+df_etfs_list = []
+df_stocks_list = []
 
-print(df_list)
+## SYMBOL FILE ##
+df_symbol = spark.read.csv(symbol_path, header=True, inferSchema=True)
+df_symbol=Transform().symbols_valid_meta(df_symbol)
 
-# Loop through each file and load it into a dataframe
-for f in file_list:
-     file_path = os.path.join(etfs_path, f)
-     print(file_path)
-#     if os.path.isfile(file_path):
-#         # Load the file into a dataframe
-#         df = pd.read_csv(file_path)
-#         # Append the dataframe to the list
-#         df_list.append(df)
-#
-# # Concatenate all the dataframes into a single dataframe
-# df = pd.concat(df_list, ignore_index=True)
-#
-# # Do whatever you need to do with the combined dataframe
-# print(df.head())
-# print(df.count())
+## ETFS FILE ##
+for f in etfs_list:
+    file_path = os.path.join(etfs_path, f)
+    if os.path.isfile(file_path):
+        pd_etfs = pd.read_csv(file_path)
+        pd_etfs["Symbol"]=f
+        df_etfs_list.append(pd_etfs)
+
+pd_etfs = pd.concat(df_etfs_list, ignore_index=True)
+df_etfs=spark.createDataFrame(pd_etfs)
+df_etfs=Transform().etfs(df_etfs,df_symbol)
+
+print(df_etfs.printSchema())
+print(df_etfs.groupby("Symbol","Security_Name").count().show())
+
+## STOCKS FILE ##
+for f in stock_list:
+    file_path = os.path.join(stock_path, f)
+    if os.path.isfile(file_path):
+        pd_stock = pd.read_csv(file_path)
+        pd_stock["Symbol"] = f
+        df_stocks_list.append(pd_stock)
+
+pd_stock = pd.concat(df_stocks_list, ignore_index=True)
+
+df_stocks=spark.createDataFrame(pd_stock)
+df_stocks=Transform().stocks(df_stocks,df_symbol)
+
+print(df_stocks.printSchema())
+print(df_stocks.groupby("Symbol","Security_Name").count().show())
