@@ -24,6 +24,8 @@ df_stocks_list = []
 df_symbol = spark.read.csv(symbol_path, header=True, inferSchema=True)
 df_symbol=Transform().symbols_valid_meta(df_symbol)
 
+print(df_symbol)
+
 ## ETFS FILE ##
 for f in etfs_list:
     file_path = os.path.join(etfs_path, f)
@@ -36,8 +38,8 @@ pd_etfs = pd.concat(df_etfs_list, ignore_index=True)
 df_etfs=spark.createDataFrame(pd_etfs)
 df_etfs=Transform().etfs(df_etfs,df_symbol)
 
-print(df_etfs.printSchema())
-print(df_etfs.groupby("Symbol","Security_Name").count().show())
+# print(df_etfs.printSchema())
+# print(df_etfs.groupby("Symbol","Security_Name").count().show())
 
 ## STOCKS FILE ##
 for f in stock_list:
@@ -52,5 +54,5 @@ pd_stock = pd.concat(df_stocks_list, ignore_index=True)
 df_stocks=spark.createDataFrame(pd_stock)
 df_stocks=Transform().stocks(df_stocks,df_symbol)
 
-print(df_stocks.printSchema())
-print(df_stocks.groupby("Symbol","Security_Name").count().show())
+# print(df_stocks.printSchema())
+# print(df_stocks.groupby("Symbol","Security_Name").count().show())
