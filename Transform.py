@@ -3,6 +3,7 @@ from pyspark.sql.functions import col,to_date
 import pyspark.sql.types as T
 from pyspark.sql.functions import *
 from pyspark.sql.window import Window
+from pyspark.sql.window import Window
 # import Extract
 
 class Transform:
@@ -30,6 +31,10 @@ class Transform:
         return compute_stocks
 
     def etfs(self,df_etfs,df_symbol):
+        date_range = 29
+        w =Window.partitionBy("Symbol").orderBy("Date").rowsBetween(0,29)
+        window_spec = Window.orderBy("Date")
+
         df_etfs=df_etfs.withColumn("Date",to_date(col("Date")).cast("date"))\
             .withColumn("High",col("High").cast("float")) \
             .withColumn("Open", col("Open").cast("float")) \
@@ -37,7 +42,9 @@ class Transform:
             .withColumn("Close", col("Close").cast("float")) \
             .withColumn("Adj Close", col("Adj Close").cast("float")) \
             .withColumn("Symbol",regexp_replace("Symbol",".csv$",""))\
-            .withColumnRenamed("Adj Close","Adj_Close")
+            .withColumnRenamed("Adj Close","Adj_Close")\
+            .withColumn("vol_moving_avg", avg("Volume").over(w).cast("float"))\
+            .withColumn("Row_Count",row_number().over(window_spec))
 
         compute_etfs=df_symbol.select("Symbol","Security_Name").join(df_etfs,"Symbol")
 

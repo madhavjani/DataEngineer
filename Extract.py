@@ -24,7 +24,7 @@ df_stocks_list = []
 df_symbol = spark.read.csv(symbol_path, header=True, inferSchema=True)
 df_symbol=Transform().symbols_valid_meta(df_symbol)
 
-print(df_symbol)
+#print(df_symbol.show(truncate=False))
 
 ## ETFS FILE ##
 for f in etfs_list:
@@ -38,21 +38,22 @@ pd_etfs = pd.concat(df_etfs_list, ignore_index=True)
 df_etfs=spark.createDataFrame(pd_etfs)
 df_etfs=Transform().etfs(df_etfs,df_symbol)
 
-# print(df_etfs.printSchema())
-# print(df_etfs.groupby("Symbol","Security_Name").count().show())
+#print(df_etfs.printSchema())
+print(df_etfs.filter(df_etfs.Symbol == "ACSI").show(50,truncate=False))
+print(df_etfs.groupby("Symbol","Security_Name").count().show(truncate=False))
 
 ## STOCKS FILE ##
-for f in stock_list:
-    file_path = os.path.join(stock_path, f)
-    if os.path.isfile(file_path):
-        pd_stock = pd.read_csv(file_path)
-        pd_stock["Symbol"] = f
-        df_stocks_list.append(pd_stock)
-
-pd_stock = pd.concat(df_stocks_list, ignore_index=True)
-
-df_stocks=spark.createDataFrame(pd_stock)
-df_stocks=Transform().stocks(df_stocks,df_symbol)
+# for f in stock_list:
+#     file_path = os.path.join(stock_path, f)
+#     if os.path.isfile(file_path):
+#         pd_stock = pd.read_csv(file_path)
+#         pd_stock["Symbol"] = f
+#         df_stocks_list.append(pd_stock)
+#
+# pd_stock = pd.concat(df_stocks_list, ignore_index=True)
+#
+# df_stocks=spark.createDataFrame(pd_stock)
+# df_stocks=Transform().stocks(df_stocks,df_symbol)
 
 # print(df_stocks.printSchema())
 # print(df_stocks.groupby("Symbol","Security_Name").count().show())
