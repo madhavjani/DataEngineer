@@ -22,7 +22,9 @@ df_stocks_list = []
 
 ## SYMBOL FILE ##
 df_symbol = spark.read.csv(symbol_path, header=True, inferSchema=True)
+df_symbol.write.format("parquet").mode("overwrite").save("Symbol_Raw_Data.parquet")
 df_symbol=Transform().symbols_valid_meta(df_symbol)
+df_symbol.write.format("parquet").mode("overwrite").save("Symbol_Transformed_Data.parquet")
 
 #print(df_symbol.show(truncate=False))
 
@@ -36,7 +38,11 @@ for f in etfs_list:
 
 pd_etfs = pd.concat(df_etfs_list, ignore_index=True)
 df_etfs=spark.createDataFrame(pd_etfs)
+df_etfs.write.format("parquet").mode("overwrite").save("ETF_Raw_Data.parquet")
+
 df_etfs=Transform().etfs(df_etfs,df_symbol)
+df_etfs.write.format("parquet").mode("overwrite").save("ETF_Transformed_Data.parquet")
+
 
 #print(df_etfs.printSchema())
 # print(df_etfs.filter(df_etfs.Symbol == "ACSI").show(50,truncate=False))
@@ -53,7 +59,10 @@ for f in stock_list:
 pd_stock = pd.concat(df_stocks_list, ignore_index=True)
 
 df_stocks=spark.createDataFrame(pd_stock)
+df_stocks.write.format("parquet").mode("overwrite").save("Stocks_Raw_Data.parquet")
+
 df_stocks=Transform().stocks(df_stocks,df_symbol)
+df_stocks.write.format("parquet").mode("overwrite").save("Stocks_Transformed_Data.parquet")
 
 # print(df_stocks.printSchema())
 # print(df_stocks.groupby("Symbol","Security_Name").count().show())
