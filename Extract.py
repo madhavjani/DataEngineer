@@ -27,6 +27,7 @@ def process_symbol_date(symbol_path):
     df_symbol=Transform().symbols_valid_meta(df_symbol)
     df_symbol.write.format("parquet").mode("overwrite").save("Symbol_Transformed_Data.parquet")
 
+
 #print(df_symbol.show(truncate=False))
 #
 # ## ETFS FILE ##
